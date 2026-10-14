@@ -1,0 +1,95 @@
+{
+  "requests": [
+    {
+      "name": "conflicting and superseded evidence",
+      "question": "Did the intake pilot reduce handling time?",
+      "document_refs": ["pilot-notes", "ops-handbook"],
+      "expect": {
+        "claims": 1,
+        "supported_claims": 1,
+        "min_evidence": 2,
+        "conflict_kinds": ["polarity", "superseded_version"],
+        "gap_kinds": [],
+        "confidence": "low"
+      }
+    },
+    {
+      "name": "mutually supporting evidence",
+      "question": "How is handling time measured?",
+      "document_refs": ["ops-handbook"],
+      "expect": {
+        "claims": 1,
+        "supported_claims": 1,
+        "min_evidence": 1,
+        "conflict_kinds": [],
+        "gap_kinds": [],
+        "confidence": "medium"
+      }
+    },
+    {
+      "name": "a superseded version on its own",
+      "question": "Did the intake pilot reduce handling time?",
+      "document_refs": ["pilot-notes@1"],
+      "expect": {
+        "claims": 1,
+        "supported_claims": 0,
+        "min_evidence": 1,
+        "conflict_kinds": ["superseded_version"],
+        "gap_kinds": ["unsupported_claim"],
+        "confidence": "none"
+      }
+    },
+    {
+      "name": "an irrelevant document",
+      "question": "Did the intake pilot reduce handling time?",
+      "document_refs": ["canteen-memo"],
+      "expect": {
+        "claims": 0,
+        "supported_claims": 0,
+        "min_evidence": 0,
+        "conflict_kinds": [],
+        "gap_kinds": ["no_match", "no_evidence"],
+        "confidence": "none"
+      }
+    },
+    {
+      "name": "a document this principal may not read",
+      "question": "Did the intake pilot reduce handling time?",
+      "document_refs": ["audit-2026"],
+      "expect": {
+        "claims": 0,
+        "supported_claims": 0,
+        "min_evidence": 0,
+        "conflict_kinds": [],
+        "gap_kinds": ["unavailable", "no_evidence"],
+        "confidence": "none"
+      }
+    },
+    {
+      "name": "an empty document",
+      "question": "Did the intake pilot reduce handling time?",
+      "document_refs": ["empty-stub"],
+      "expect": {
+        "claims": 0,
+        "supported_claims": 0,
+        "min_evidence": 0,
+        "conflict_kinds": [],
+        "gap_kinds": ["no_match", "no_evidence"],
+        "confidence": "none"
+      }
+    },
+    {
+      "name": "no evidence at all",
+      "question": "What is the espresso machine warranty?",
+      "document_refs": [],
+      "expect": {
+        "claims": 0,
+        "supported_claims": 0,
+        "min_evidence": 0,
+        "conflict_kinds": [],
+        "gap_kinds": ["no_evidence"],
+        "confidence": "none"
+      }
+    }
+  ]
+}

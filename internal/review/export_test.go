@@ -130,15 +130,15 @@ func TestExportWritesTheAnswerAndItsReviewRecord(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read the sidecar: %v", err)
 	}
-	var decoded research.ResearchAnswer
-	if err := json.Unmarshal(sidecar, &decoded); err != nil {
-		t.Fatalf("the sidecar is not the answer: %v", err)
+	var record ExportRecord
+	if err := json.Unmarshal(sidecar, &record); err != nil {
+		t.Fatalf("the sidecar is not an export record: %v", err)
 	}
-	if decoded.Question != answerFixture().Question || len(decoded.Claims) != 1 {
-		t.Errorf("the sidecar does not carry the answer: %+v", decoded)
+	if record.Answer.Question != answerFixture().Question || len(record.Answer.Claims) != 1 {
+		t.Errorf("the sidecar does not carry the answer: %+v", record.Answer)
 	}
-	if !strings.Contains(string(sidecar), "review") {
-		t.Errorf("the sidecar does not carry the review record: %s", sidecar)
+	if !record.Review.Authorizes(ActionExport) || record.Review.By != "ana@acme.test" {
+		t.Errorf("the sidecar does not carry the approval: %+v", record.Review)
 	}
 }
 
