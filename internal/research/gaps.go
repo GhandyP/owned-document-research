@@ -10,10 +10,11 @@ const unavailableDetail = "no readable document matches this reference"
 // resolveScope turns the requested references into the documents a run may
 // search, and reports every reference it could not resolve.
 //
-// A reference that names a document without a version resolves to that
-// document's newest readable version: asking for a document means asking for
-// what it says now, and an older version must never stand in for a restricted
-// current one.
+// A reference that names a document without a version resolves to every
+// readable version of it. That is deliberate: a document says things across its
+// versions, and a version that a newer one replaced has to stay reachable for
+// the disagreement to be reported instead of disappearing the moment the corpus
+// is asked about the document by name.
 func resolveScope(scoped []DocumentMeta, refs []string) ([]DocumentMeta, []Gap) {
 	if len(refs) == 0 {
 		return scoped, nil
@@ -28,7 +29,7 @@ func resolveScope(scoped []DocumentMeta, refs []string) ([]DocumentMeta, []Gap) 
 			gaps = append(gaps, Gap{Kind: GapUnavailable, Ref: ref, Detail: "the reference is malformed"})
 			continue
 		}
-		newest := 0
+		matched := false
 		for _, meta := range scoped {
 			if meta.ID != id {
 				continue
@@ -36,29 +37,15 @@ func resolveScope(scoped []DocumentMeta, refs []string) ([]DocumentMeta, []Gap) 
 			if version != 0 && meta.Version != version {
 				continue
 			}
-			if meta.Version > newest {
-				newest = meta.Version
-			}
-		}
-		if newest == 0 {
-			gaps = append(gaps, Gap{Kind: GapUnavailable, Ref: ref, Detail: unavailableDetail})
-			continue
-		}
-		for _, meta := range scoped {
-			if meta.ID != id {
-				continue
-			}
-			if version == 0 && meta.Version != newest {
-				continue
-			}
-			if version != 0 && meta.Version != version {
-				continue
-			}
+			matched = true
 			if taken[meta.Ref()] {
 				continue
 			}
 			taken[meta.Ref()] = true
 			out = append(out, meta)
+		}
+		if !matched {
+			gaps = append(gaps, Gap{Kind: GapUnavailable, Ref: ref, Detail: unavailableDetail})
 		}
 	}
 	return out, gaps

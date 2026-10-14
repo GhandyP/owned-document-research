@@ -42,7 +42,7 @@ func Export(path string, answer research.ResearchAnswer, decision Decision) erro
 	if err := os.WriteFile(sidecarPath, sidecar, 0o600); err != nil {
 		return fmt.Errorf("review: write %s: %w", sidecarPath, err)
 	}
-	if err := os.WriteFile(path, []byte(renderMarkdown(record)), 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(RenderMarkdown(record)), 0o600); err != nil {
 		// A sidecar without its answer would be a misleading half export.
 		if removeErr := os.Remove(sidecarPath); removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
 			return fmt.Errorf("review: write %s: %w (and %s could not be removed: %v)", path, err, sidecarPath, removeErr)
@@ -52,8 +52,9 @@ func Export(path string, answer research.ResearchAnswer, decision Decision) erro
 	return nil
 }
 
-// renderMarkdown writes the answer for a human reader.
-func renderMarkdown(record ExportRecord) string {
+// RenderMarkdown writes an answer for a human reader. It is also what the
+// command line prints, so a reader sees exactly what an export would contain.
+func RenderMarkdown(record ExportRecord) string {
 	answer := record.Answer
 	decision := record.Review
 
@@ -62,15 +63,18 @@ func renderMarkdown(record ExportRecord) string {
 	fmt.Fprintf(&b, "**Question:** %s\n\n", answer.Question)
 	fmt.Fprintf(&b, "**Confidence:** %s\n\n", answer.Confidence)
 	b.WriteString("This answer is advisory: it informs a human decision, it does not make one.\n\n")
-	fmt.Fprintf(&b, "**Reviewed by:** %s at %s\n\n", decision.By, decision.At.UTC().Format(time.RFC3339))
-	if decision.Note != "" {
-		fmt.Fprintf(&b, "**Review note:** %s\n\n", decision.Note)
+	if decision.Authorizes(ActionExport) {
+		fmt.Fprintf(&b, "**Reviewed by:** %s at %s\n\n", decision.By, decision.At.UTC().Format(time.RFC3339))
+		if decision.Note != "" {
+			fmt.Fprintf(&b, "**Review note:** %s\n\n", decision.Note)
+		}
+	} else if len(answer.Claims) == 0 {
+		b.WriteString("No claim survived: the corpus did not answer the question.\n\n")
+	} else {
+		b.WriteString("**Not reviewed yet.** Publishing this answer is a separate, approved action.\n\n")
 	}
 
 	b.WriteString("## Claims\n\n")
-	if len(answer.Claims) == 0 {
-		b.WriteString("No claim survived: the corpus did not answer the question.\n\n")
-	}
 	for _, claim := range answer.Claims {
 		status := "unsupported"
 		if claim.Supported {
