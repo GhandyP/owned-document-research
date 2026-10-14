@@ -146,7 +146,7 @@ func buildClaims(findings []Finding, validated []validated, metas map[string]Doc
 			return collected[i].Start < collected[j].Start
 		})
 
-		supports, contradicts, stale := false, false, false
+		supports, contradicts, stale, current := false, false, false, false
 		for _, evidence := range collected {
 			if evidence.Polarity == PolarityContradicts {
 				contradicts = true
@@ -155,20 +155,27 @@ func buildClaims(findings []Finding, validated []validated, metas map[string]Doc
 			}
 			if superseded[evidence.Ref] {
 				stale = true
+			} else {
+				current = true
 			}
 		}
 
-		claim := Claim{ID: "", Statement: statement, Confidence: ConfidenceNone}
+		claim := Claim{ID: "", Statement: statement, Confidence: ConfidenceNone, Evidence: collected}
 		switch {
 		case len(collected) == 0 && unknownIndex:
+			claim.Evidence = nil
 			claim.Reason = "the proposal cited evidence that is not in the retrieved set"
 		case len(collected) == 0:
+			claim.Evidence = nil
 			claim.Reason = "the proposal cited no evidence"
 		case !supports:
 			claim.Reason = "the retrieved evidence contradicts this statement"
+		case !current:
+			// The quotes are real, but every one of them comes from a version a
+			// newer one replaced: stale evidence is shown, never trusted.
+			claim.Reason = "every quote backing this statement comes from a version that has been superseded"
 		default:
 			claim.Supported = true
-			claim.Evidence = collected
 			claim.Confidence = Weaker(validConfidence(finding.Confidence), evidenceCap(stale, contradicts))
 		}
 
@@ -270,9 +277,9 @@ func evidenceRows(claims []Claim, metas map[string]DocumentMeta, superseded map[
 }
 
 // answerConfidence reports the confidence of the whole answer: no stronger than
-// its weakest supported claim, and no stronger than the unsupported statements
-// it still carries.
-func answerConfidence(claims []Claim) Confidence {
+// its weakest supported claim, no stronger than the unsupported statements it
+// still carries, and never stronger than low while a conflict stands.
+func answerConfidence(claims []Claim, conflicts []Conflict) Confidence {
 	confidence := ConfidenceNone
 	supported := 0
 	unsupported := false
@@ -292,7 +299,10 @@ func answerConfidence(claims []Claim) Confidence {
 		return ConfidenceNone
 	}
 	if unsupported {
-		return Weaker(confidence, ConfidenceMedium)
+		confidence = Weaker(confidence, ConfidenceMedium)
+	}
+	if len(conflicts) > 0 {
+		confidence = Weaker(confidence, ConfidenceLow)
 	}
 	return confidence
 }

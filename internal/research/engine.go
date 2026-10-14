@@ -144,7 +144,8 @@ func (e *Engine) Research(ctx context.Context, p Principal, req ResearchRequest)
 	answer.EvidenceTable = rows
 	answer.Warnings = append(answer.Warnings, claimWarnings...)
 	answer.Gaps = append(answer.Gaps, unsupportedGaps(claims)...)
-	answer.Confidence = answerConfidence(claims)
+	answer.Conflicts = detectConflicts(claims, supersededSet(scoped), replacementRefs(scoped))
+	answer.Confidence = answerConfidence(claims, answer.Conflicts)
 	answer.Warnings = capWarnings(answer.Warnings)
 	return answer, nil
 }

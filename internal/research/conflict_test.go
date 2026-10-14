@@ -219,14 +219,8 @@ func TestNoEvidenceIsAnOutcomeNotAnEmptyAnswer(t *testing.T) {
 
 func TestAForbiddenReferenceAnswersExactlyLikeAnAbsentOne(t *testing.T) {
 	// bob is in acme/ops: audit-2026 exists but is restricted to acme/legal.
-	forbidden, err := engineWith(t, testCorpus(t), nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	absent, err := engineWith(t, testCorpus(t), nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	forbidden, _, _ := engineWith(t, testCorpus(t), nil, nil)
+	absent, _, _ := engineWith(t, testCorpus(t), nil, nil)
 
 	forbiddenAnswer, err := forbidden.Research(context.Background(), bob, ResearchRequest{
 		Question:     question,
