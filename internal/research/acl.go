@@ -16,22 +16,34 @@ type Principal struct {
 }
 
 // ReadableBy reports whether the principal may read this document version.
+func (d Document) ReadableBy(p Principal) bool {
+	return readableBy(d.Owner, d.Tenant, d.Allow, p)
+}
+
+// ReadableBy reports whether the principal may read this version according to
+// the metadata alone, which is what lets the engine re-check permissions on a
+// reference it only has metadata for.
+func (m DocumentMeta) ReadableBy(p Principal) bool {
+	return readableBy(m.Owner, m.Tenant, m.Allow, p)
+}
+
+// readableBy is the single permission rule of the package.
 //
 // The tenant boundary is absolute: a document is only readable inside its own
 // tenant, however the allow list is written, so a stray "user:" or "*" entry can
 // never open a document to another tenant. Inside the tenant, the owner always
 // reads their document, and any other principal needs a matching allow entry.
-func (d Document) ReadableBy(p Principal) bool {
-	if d.Tenant == "" || p.Tenant == "" || d.Tenant != p.Tenant {
+func readableBy(owner, tenant string, allow []string, p Principal) bool {
+	if tenant == "" || p.Tenant == "" || tenant != p.Tenant {
 		return false
 	}
-	if p.ID != "" && p.ID == d.Owner {
+	if p.ID != "" && p.ID == owner {
 		return true
 	}
 	if p.ID == "" {
 		return false
 	}
-	for _, entry := range d.Allow {
+	for _, entry := range allow {
 		switch {
 		case entry == "*":
 			return true
