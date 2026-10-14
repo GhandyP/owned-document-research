@@ -1,0 +1,82 @@
+{
+  "documents": [
+    {
+      "id": "pilot-notes",
+      "title": "Intake pilot notes",
+      "owner": "ana@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["group:ops", "user:carla@acme.test"],
+      "version": 2,
+      "supersedes": "pilot-notes@1",
+      "updated_at": "2026-03-14T09:00:00Z",
+      "tags": ["pilot", "operations"],
+      "text": "The intake pilot reduced handling time by a third across the first quarter.\n\nThe pilot ran in two regions and covered about four hundred cases.\n\nAgents asked for more training on the new intake form."
+    },
+    {
+      "id": "pilot-notes",
+      "title": "Intake pilot notes",
+      "owner": "ana@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["group:ops", "user:carla@acme.test"],
+      "version": 1,
+      "updated_at": "2026-01-20T09:00:00Z",
+      "tags": ["pilot", "operations"],
+      "text": "The pilot did not change handling time, according to the early read of the first month.\n\nThe early read covered only sixty cases and was later corrected."
+    },
+    {
+      "id": "ops-handbook",
+      "title": "Operations handbook",
+      "owner": "ana@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["*"],
+      "version": 1,
+      "updated_at": "2026-02-02T09:00:00Z",
+      "tags": ["operations"],
+      "text": "Handling time is measured from the moment a case is opened until the moment it is closed.\n\nThe measure excludes time spent waiting on a customer reply."
+    },
+    {
+      "id": "audit-2026",
+      "title": "Internal audit 2026",
+      "owner": "dan@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["group:legal"],
+      "version": 1,
+      "updated_at": "2026-04-01T09:00:00Z",
+      "tags": ["audit"],
+      "text": "The audit found no evidence that handling time fell during the pilot window.\n\nThe sample was drawn from a different queue than the pilot covered."
+    },
+    {
+      "id": "canteen-memo",
+      "title": "Canteen memo",
+      "owner": "ana@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["group:ops"],
+      "version": 1,
+      "updated_at": "2026-02-11T09:00:00Z",
+      "tags": ["facilities"],
+      "text": "The canteen will close at three on Friday for a private event.\n\nSandwiches will be available in the lobby."
+    },
+    {
+      "id": "empty-stub",
+      "title": "Placeholder for the Q3 review",
+      "owner": "ana@acme.test",
+      "tenant": "drive-acme",
+      "allow": ["group:ops"],
+      "version": 1,
+      "updated_at": "2026-04-02T09:00:00Z",
+      "tags": ["planning"],
+      "text": ""
+    },
+    {
+      "id": "globex-benchmark",
+      "title": "Globex benchmark",
+      "owner": "eve@globex.test",
+      "tenant": "drive-globex",
+      "allow": ["*"],
+      "version": 1,
+      "updated_at": "2026-03-30T09:00:00Z",
+      "tags": ["benchmark"],
+      "text": "Globex reports handling time is not measured the same way, so the comparison is not meaningful."
+    }
+  ]
+}
