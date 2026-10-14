@@ -1,0 +1,23 @@
+# Compiled binaries
+/owned-document-research
+*.exe
+*.test
+*.out
+
+# Coverage profiles
+coverage.txt
+coverage.html
+
+# Local secrets: never commit a real key, a client secret, or a token cache
+.env
+.env.local
+client_secret.json
+token.json
+
+# Generated research exports
+/out/
+
+# Editor and OS noise
+.idea/
+.vscode/
+.DS_Store
