@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 )
 
 // ErrUnavailable is returned for a document reference that cannot be served.
@@ -17,15 +18,15 @@ var ErrUnavailable = errors.New("document is not available")
 
 // DocumentMeta is a document reference without its body.
 type DocumentMeta struct {
-	ID         string   `json:"id"`
-	Title      string   `json:"title"`
-	Owner      string   `json:"owner"`
-	Tenant     string   `json:"tenant"`
-	Allow      []string `json:"allow,omitempty"`
-	Version    int      `json:"version"`
-	Supersedes string   `json:"supersedes,omitempty"`
-	UpdatedAt  string   `json:"updated_at,omitempty"`
-	Tags       []string `json:"tags,omitempty"`
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	Owner      string    `json:"owner"`
+	Tenant     string    `json:"tenant"`
+	Allow      []string  `json:"allow,omitempty"`
+	Version    int       `json:"version"`
+	Supersedes string    `json:"supersedes,omitempty"`
+	UpdatedAt  time.Time `json:"updated_at,omitempty"`
+	Tags       []string  `json:"tags,omitempty"`
 }
 
 // Ref returns the "<document id>@<version>" reference of this version.
@@ -43,6 +44,7 @@ func (d Document) Meta() DocumentMeta {
 		Allow:      d.Allow,
 		Version:    d.Version,
 		Supersedes: d.Supersedes,
+		UpdatedAt:  d.UpdatedAt,
 		Tags:       d.Tags,
 	}
 }
@@ -144,47 +146,20 @@ func (s *MemorySource) Get(_ context.Context, p Principal, id string, version in
 
 // Search returns the best matching passage per readable document.
 func (s *MemorySource) Search(_ context.Context, p Principal, query string, limit int) ([]Passage, error) {
-	queryTokens := uniqueTokens(tokenize(query))
-	if len(queryTokens) == 0 {
-		return nil, nil
-	}
-	if limit <= 0 {
-		limit = DefaultSearchLimit
-	}
-	superseded := supersededSet(s.metas())
-	var scored []scoredPassage
+	readable := make([]Document, 0, len(s.docs))
 	for _, doc := range s.docs {
-		if !doc.ReadableBy(p) {
-			continue
-		}
-		best := scoredPassage{score: -1}
-		for _, block := range splitBlocks(doc.Text) {
-			block.DocumentID = doc.ID
-			block.Version = doc.Version
-			block.Title = doc.Title
-			block.Owner = doc.Owner
-			got := score(queryTokens, block.Text)
-			if got > best.score {
-				best = scoredPassage{passage: block, score: got, stale: superseded[doc.Ref()]}
-			}
-		}
-		if best.score > 0 {
-			scored = append(scored, best)
+		if doc.ReadableBy(p) {
+			readable = append(readable, doc)
 		}
 	}
-	ranked := rankPassages(scored)
-	if len(ranked) > limit {
-		ranked = ranked[:limit]
-	}
-	return ranked, nil
+	return SearchDocuments(query, readable, limit), nil
 }
 
-func (s *MemorySource) metas() []DocumentMeta {
-	metas := make([]DocumentMeta, 0, len(s.docs))
-	for _, doc := range s.docs {
-		metas = append(metas, doc.Meta())
-	}
-	return metas
+// Documents returns every version the source holds, in reference order. It is
+// meant for adapters that project a corpus file into this type, not for
+// callers: a caller goes through List, Get or Search, which apply permissions.
+func (s *MemorySource) Documents() []Document {
+	return append([]Document{}, s.docs...)
 }
 
 // supersededSet collects the references that some newer version says it

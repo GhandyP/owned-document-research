@@ -75,6 +75,63 @@ func score(queryTokens []string, text string) int {
 	return total
 }
 
+// QueryTokens returns the words a query is searched by: lower case, without
+// punctuation and without the stopwords that carry no retrieval signal. An
+// adapter that searches a remote service builds its query from these tokens, so
+// the words it asks about are the same words the local ranking looks for.
+func QueryTokens(query string) []string {
+	return uniqueTokens(tokenize(query))
+}
+
+// SearchDocuments ranks the passages of a set of documents against a query.
+//
+// It is the one retrieval rule in the package, exported so an adapter that
+// holds its own documents — a local corpus, a remote drive — produces the same
+// ranking as the in-memory source instead of a second, quietly different one.
+// The caller is responsible for passing only documents the principal may read;
+// the engine re-checks anyway.
+func SearchDocuments(query string, docs []Document, limit int) []Passage {
+	queryTokens := uniqueTokens(tokenize(query))
+	if len(queryTokens) == 0 {
+		return nil
+	}
+	if limit <= 0 {
+		limit = DefaultSearchLimit
+	}
+	superseded := supersededSet(metasOf(docs))
+	var scored []scoredPassage
+	for _, doc := range docs {
+		best := scoredPassage{score: -1}
+		for _, block := range splitBlocks(doc.Text) {
+			block.DocumentID = doc.ID
+			block.Version = doc.Version
+			block.Title = doc.Title
+			block.Owner = doc.Owner
+			got := score(queryTokens, block.Text)
+			if got > best.score {
+				best = scoredPassage{passage: block, score: got, stale: superseded[doc.Ref()]}
+			}
+		}
+		if best.score > 0 {
+			scored = append(scored, best)
+		}
+	}
+	ranked := rankPassages(scored)
+	if len(ranked) > limit {
+		ranked = ranked[:limit]
+	}
+	return ranked
+}
+
+// metasOf returns the reference metadata of a set of documents.
+func metasOf(docs []Document) []DocumentMeta {
+	metas := make([]DocumentMeta, 0, len(docs))
+	for _, doc := range docs {
+		metas = append(metas, doc.Meta())
+	}
+	return metas
+}
+
 // scoredPassage carries the retrieval score and the staleness of a passage
 // while a search is being assembled.
 type scoredPassage struct {

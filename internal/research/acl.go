@@ -61,7 +61,11 @@ func readableBy(owner, tenant string, allow []string, p Principal) bool {
 	return false
 }
 
-var allowEntryPattern = regexp.MustCompile(`^(?:\*|(?:user|group):[a-z0-9][a-z0-9._-]*)$`)
+// allowEntryPattern accepts the three allow shapes. An identity may be an
+// address, so the identifier part allows '@' as well as the characters a
+// group name uses; everything stays lower case so two spellings of the same
+// identity cannot grant access twice.
+var allowEntryPattern = regexp.MustCompile(`^(?:\*|(?:user|group):[a-z0-9][a-z0-9._@-]*)$`)
 
 // ValidAllowEntry reports whether an allow-list entry has one of the accepted
 // shapes: "*", "user:<id>", or "group:<name>".
