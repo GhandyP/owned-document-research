@@ -12,7 +12,18 @@ import (
 // document with no body, and an irrelevant document.
 func testCorpus(t *testing.T) *MemorySource {
 	t.Helper()
-	src, err := NewMemorySource([]Document{
+	src, err := NewMemorySource(testDocuments())
+	if err != nil {
+		t.Fatalf("NewMemorySource: %v", err)
+	}
+	return src
+}
+
+// testDocuments is the shared fixture set for the deterministic half of the
+// package. It deliberately contains two tenants, a superseded version, a
+// document with no body, and a document nothing asks about.
+func testDocuments() []Document {
+	return []Document{
 		{
 			ID: "pilot-notes", Title: "Pilot notes", Owner: "ana", Tenant: "acme",
 			Allow: []string{"group:ops", "user:carla"}, Version: 2, Supersedes: "pilot-notes@1",
@@ -43,11 +54,7 @@ func testCorpus(t *testing.T) *MemorySource {
 			ID: "empty-stub", Title: "Empty stub", Owner: "ana", Tenant: "acme",
 			Allow: []string{"group:ops"}, Version: 1, Text: "",
 		},
-	})
-	if err != nil {
-		t.Fatalf("NewMemorySource: %v", err)
 	}
-	return src
 }
 
 var (
